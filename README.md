@@ -447,6 +447,16 @@ cmake --build build -j
 ctest --test-dir build --output-on-failure     # or ./build/botched_tests
 ```
 
+### macOS
+
+```sh
+brew install cmake pkg-config sdl2 sdl2_ttf
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+Run from Terminal as on Linux. The SDL client uses Verdana unless DejaVu is installed (`brew install --cask font-dejavu`).
+
 ## Run a match with no clients connected
 
 ```sh

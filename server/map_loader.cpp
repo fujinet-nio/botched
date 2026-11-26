@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -9,6 +10,11 @@
 #include <map>
 #include <set>
 #include <sstream>
+#include <vector>
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 namespace botched::server {
 
@@ -162,13 +168,27 @@ bool has_dir(const fs::path& p) {
     std::error_code ec;
     return fs::is_directory(p, ec);
 }
+
+fs::path current_executable() {
+    std::error_code ec;
+#ifdef __APPLE__
+    std::uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    std::vector<char> buf(size + 1, '\0');
+    if (_NSGetExecutablePath(buf.data(), &size) != 0) return {};
+    fs::path p = fs::weakly_canonical(fs::path(buf.data()), ec);
+    return ec ? fs::path(buf.data()) : p;
+#else
+    return fs::read_symlink("/proc/self/exe", ec);
+#endif
+}
 }  // namespace
 
 std::string resolve_maps_dir(const std::string& explicit_dir, const std::string& exe_path) {
     if (!explicit_dir.empty()) return explicit_dir;
     if (const char* env = std::getenv("BOTCHED_MAPS_DIR"); env && *env) return env;
     std::error_code ec;
-    fs::path exe = exe_path.empty() ? fs::read_symlink("/proc/self/exe", ec) : fs::path(exe_path);
+    fs::path exe = exe_path.empty() ? current_executable() : fs::path(exe_path);
     if (!exe.empty()) {
         if (exe.is_relative()) exe = fs::absolute(exe, ec);
         const fs::path dir = exe.parent_path();

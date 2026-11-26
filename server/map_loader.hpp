@@ -66,7 +66,7 @@ void print_map_report(const MapDirReport& report, std::ostream& out);
 //      <executable dir>/../resources/maps (build tree inside the source tree)
 //   4. the compile-time default (BOTCHED_DEFAULT_MAPS_DIR: the source tree's resources/maps)
 //   5. ./resources/maps
-// `exe_path` defaults to /proc/self/exe when empty (Linux); pass argv[0] elsewhere.
+// `exe_path` defaults to the running executable when empty.
 std::string resolve_maps_dir(const std::string& explicit_dir = "", const std::string& exe_path = "");
 
 }  // namespace botched::server

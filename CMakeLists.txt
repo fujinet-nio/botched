@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
+# Dedupe static libs on the link line (Apple ld warns).
+if(POLICY CMP0156)
+  cmake_policy(SET CMP0156 NEW)
+endif()
 project(botched LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)

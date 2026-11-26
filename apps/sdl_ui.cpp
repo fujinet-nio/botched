@@ -11,7 +11,9 @@
 #include <cstdlib>
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "ascii_render.hpp"
 #include "bot.hpp"
@@ -147,13 +149,24 @@ struct Gfx {
     int line_h(TTF_Font* f) { return TTF_FontLineSkip(f); }
 };
 
+std::vector<std::string> font_dirs() {
+    std::vector<std::string> dirs = {"/usr/share/fonts/TTF/", "/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/dejavu-sans-fonts/",
+                                     "/usr/share/fonts/dejavu/", "/usr/share/fonts/liberation/", "/usr/share/fonts/truetype/liberation/"};
+#ifdef __APPLE__
+    if (const char* home = std::getenv("HOME"); home && *home) dirs.push_back(std::string(home) + "/Library/Fonts/");
+    for (const char* d : {"/Library/Fonts/", "/opt/homebrew/share/fonts/", "/usr/local/share/fonts/", "/System/Library/Fonts/Supplemental/",
+                          "/System/Library/Fonts/"})
+        dirs.push_back(d);
+#endif
+    return dirs;
+}
+
 TTF_Font* open_font(const char* const* names, int size) {
     if (const char* o = std::getenv("BOTCHED_FONT")) if (*o) if (TTF_Font* f = TTF_OpenFont(o, size)) return f;
-    static const char* const dirs[] = {"/usr/share/fonts/TTF/", "/usr/share/fonts/truetype/dejavu/", "/usr/share/fonts/dejavu-sans-fonts/",
-                                       "/usr/share/fonts/dejavu/", "/usr/share/fonts/liberation/", "/usr/share/fonts/truetype/liberation/"};
+    static const std::vector<std::string> dirs = font_dirs();
     for (const char* const* n = names; *n; ++n)
-        for (const char* d : dirs)
-            if (TTF_Font* f = TTF_OpenFont((std::string(d) + *n).c_str(), size)) return f;
+        for (const std::string& d : dirs)
+            if (TTF_Font* f = TTF_OpenFont((d + *n).c_str(), size)) return f;
     return nullptr;
 }
 
@@ -1613,8 +1626,8 @@ client::ClientResult run_ui(const client::ClientOptions& opt) {
         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
         SDL_RenderSetLogicalSize(rd, kScreenW, kScreenH);
         SDL_SetRenderDrawBlendMode(rd, SDL_BLENDMODE_BLEND);
-        static const char* const sans[] = {"DejaVuSans.ttf", "LiberationSans-Regular.ttf", nullptr};
-        static const char* const bold[] = {"DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", nullptr};
+        static const char* const sans[] = {"DejaVuSans.ttf", "LiberationSans-Regular.ttf", "Verdana.ttf", "Arial.ttf", nullptr};
+        static const char* const bold[] = {"DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", "Verdana Bold.ttf", "Arial Bold.ttf", nullptr};
         g.r = rd;
         g.small = open_font(sans, 14);
         g.body = open_font(bold, 17);
